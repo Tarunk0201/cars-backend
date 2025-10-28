@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const ConnectionRequest = require("../../models/connectionRequest");
-const { sendEmail } = require("../../config/email");
+const { sendTelegramMessage } = require("../../Utils/telegram");
 
+// API key middleware (no changes)
 const checkApiKey = (req, res, next) => {
   const apiKey = req.headers["x-api-key"];
   const expectedApiKey = process.env.API_KEY;
@@ -12,7 +13,6 @@ const checkApiKey = (req, res, next) => {
       .status(401)
       .json({ error: "Unauthorized: Invalid or missing API key" });
   }
-
   next();
 };
 
@@ -37,38 +37,34 @@ router.post("/send", checkApiKey, async (req, res, next) => {
     await connectionRequest.save();
     console.log(`Connection request created: ${connectionRequest._id}`);
 
-    try {
-      const now = new Date();
-      const dateOptions = {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      };
-      const formattedDate = now.toLocaleString("en-US", dateOptions);
-
-      const emailSubject = `New Contact Request from ${name}`;
-      const emailHtml = `
-        <h2>New Contact Request</h2>
-        <p><strong>Source:</strong> ${source}</p>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message}</p>
-        <p><strong>Received at:</strong> ${formattedDate}</p>
-      `;
-      await sendEmail(process.env.ADMIN_EMAIL, emailSubject, emailHtml);
-      console.log("Email notification sent successfully");
-    } catch (emailError) {
-      console.error("Failed to send email notification:", emailError);
-    }
-
+    // 3. SEND THE RESPONSE - This makes your API fast
     res.status(201).json({
       message: "Your words are in my inbox. Thanks for connecting!",
       id: connectionRequest._id,
     });
+
+    // 4. FIRE AND FORGET NOTIFICATION (in the background)
+    // The user is not waiting for this to finish
+    try {
+      const notificationMessage = `
+<b>New Contact Request!</b> 📬
+---------------------------
+<b>From:</b> ${name}
+<b>Email:</b> ${email}
+<b>Source:</b> ${source}
+<b>Message:</b>
+<pre>${message}</pre>
+      `;
+
+      // We don't 'await' this. Just let it run.
+      sendTelegramMessage(notificationMessage);
+    } catch (notificationError) {
+      // Log the error, but the user is already gone.
+      console.error(
+        "Failed to send Telegram notification in background:",
+        notificationError
+      );
+    }
   } catch (err) {
     console.error("Error creating connection request:", err.message);
     next(err);
