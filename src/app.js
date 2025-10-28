@@ -3,6 +3,7 @@ const cors = require("cors");
 const path = require("path");
 const carsRouter = require("./routes/cars");
 const contactRouter = require("./routes/portfolio/Contact");
+const healthRouter = require("./routes/health");
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/images", express.static(path.join(__dirname, "../public")));
 
 app.use("/cars", carsRouter);
 app.use("/contact", contactRouter);
+app.use("/health", healthRouter);
 
 // simple error handler
 app.use((err, req, res, next) => {
