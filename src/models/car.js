@@ -57,14 +57,6 @@ const VariantSchema = new Schema(
     fuelType: {
       type: String,
       required: true,
-      enum: [
-        "Petrol",
-        "Diesel",
-        "CNG",
-        "Electric",
-        "Plug-in Hybrid (Electric + Petrol)",
-        "Hybrid",
-      ],
     },
     transmission: {
       type: String,
