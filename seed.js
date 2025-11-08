@@ -6,9 +6,7 @@ const Car = require("./src/models/car");
 async function seedDatabase() {
   try {
     // Connect to the database directly
-    const uri =
-      process.env.MONGODB_URI ||
-      "mongodb+srv://tarunsingh7801:Tarun7803@cluster0.rbnsg.mongodb.net/?appName=Cluster0";
+    const uri = process.env.MONGODB_URI;
     await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
     });
